@@ -1,0 +1,21 @@
+Manifest-Version: 1.0
+Bnd-LastModified: 1394012684466
+Build-Jdk: 1.7.0_51
+Built-By: lpfannenschmidt
+Bundle-ManifestVersion: 2
+Bundle-Name: Swookiee RFC Client
+Bundle-SymbolicName: com.swookiee.tools.client
+Bundle-Version: 1.0.0.SNAPSHOT
+Created-By: Apache Maven Bundle Plugin
+Export-Package: com.swookiee.tools.client;uses:="com.fasterxml.jackson.c
+ ore,com.fasterxml.jackson.databind,com.swookiee.runtime.ewok.representa
+ tion,org.apache.http,org.apache.http.client.protocol,org.apache.http.im
+ pl.client";version="1.0.0.SNAPSHOT"
+Import-Package: com.fasterxml.jackson.core;version="[2.3,3)",com.fasterx
+ ml.jackson.databind;version="[2.3,3)",com.fasterxml.jackson.databind.ty
+ pe;version="[2.3,3)",com.swookiee.runtime.ewok.representation,org.apach
+ e.http,org.apache.http.auth,org.apache.http.client,org.apache.http.clie
+ nt.methods,org.apache.http.client.protocol,org.apache.http.entity,org.a
+ pache.http.impl.auth,org.apache.http.impl.client,org.apache.http.protoc
+ ol,org.apache.http.util,org.slf4j;version="[1.7,2)"
+Tool: Bnd-2.1.0.20130426-122213
