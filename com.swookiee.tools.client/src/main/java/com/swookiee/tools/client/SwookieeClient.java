@@ -1,10 +1,14 @@
 package com.swookiee.tools.client;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.util.List;
+import java.util.jar.Attributes;
+import java.util.jar.JarInputStream;
+import java.util.jar.Manifest;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
@@ -12,6 +16,7 @@ import org.apache.http.HttpRequest;
 import org.apache.http.HttpStatus;
 import org.apache.http.StatusLine;
 import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
@@ -24,9 +29,7 @@ import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.swookiee.runtime.ewok.representation.BundleRepresentation;
 import com.swookiee.runtime.ewok.representation.BundleStatusRepresentation;
@@ -41,6 +44,7 @@ public final class SwookieeClient {
 
     private static final String FRAMEWORK_BUNDLES = "/framework/bundles";
     private static final String FRAMEWORK_BUNDLES_REPRESENTATIONS = "/framework/bundles/representations";
+    private static final String FRAMEWORK_BUNDLE = "/framework/bundle/";
 
     private static final Logger logger = LoggerFactory.getLogger(SwookieeClient.class);
 
@@ -65,35 +69,93 @@ public final class SwookieeClient {
         }
     }
 
-    public String installBundle(final File file) throws SwookieeClientException, IOException {
+    /**
+     * Installs a Bundle on a remote swookiee instance.
+     * 
+     * @param file
+     *            the bundle which will be installed
+     * @return the location of the installed bundle
+     * @throws SwookieeClientException
+     *             Will be thrown if the Bundle is already installed, or in case something goes wrong in during
+     *             communication.
+     */
+    public String installBundle(final File file) throws SwookieeClientException {
         return installBundle(file, false);
     }
 
-    public String installBundle(final File file, final boolean forceInstall) throws SwookieeClientException,
-    IOException {
+    /**
+     * Installs a Bundle on a remote swookiee instance.
+     * 
+     * @param file
+     *            the bundle which will be installed
+     * @param forceInstall
+     *            set to {@code true} to make sure that the bundle having the same bundle symbolic name as from given
+     *            file will be un-installed before installation of given file starts.
+     * @return the location of the installed bundle
+     * @throws SwookieeClientException
+     *             Will be thrown in case something goes wrong during the installation
+     */
+    public String installBundle(final File file, final boolean forceInstall) throws SwookieeClientException {
+
+        String bundleSymbolicName = getBundleSymbolicName(file);
+
+        if (forceInstall) {
+            uninstallIfInstalled(bundleSymbolicName);
+        }
+
         final HttpPost post = new HttpPost(FRAMEWORK_BUNDLES);
         addFile(post, file);
-        addForceHeader(post);
         final String response = makeCall(post, HttpStatus.SC_OK);
         return response.trim();
     }
 
+    /**
+     * Un-install a bundle given its Bundle id.
+     * 
+     * @param bundleId
+     *            id of the bundle which will be uninstalled
+     * @throws SwookieeClientException
+     *             Will be thrown in case something goes wrong during the installation
+     */
+    public void uninstallBundle(final Long bundleId) throws SwookieeClientException {
+        final HttpDelete delete = new HttpDelete(FRAMEWORK_BUNDLE + bundleId);
+        makeCall(delete, HttpStatus.SC_OK);
+    }
+
+    /**
+     * This method starts a bundle given its full path (containg id).
+     * 
+     * @param bundlePath
+     *            the path to the bundle. e.g. the response of {@link SwookieeClient#installBundle(File)}
+     * @throws SwookieeClientException
+     *             Will be thrown in case something goes wrong during the installation
+     */
     public void startBundle(final String bundlePath) throws SwookieeClientException {
         final HttpPut put = new HttpPut(String.format("%s/state", bundlePath));
         addActivate(put);
         makeCall(put, HttpStatus.SC_OK);
     }
 
+    /**
+     * This method helps to return the actual configured target of the underlying HTTP client.
+     * 
+     * @return The HTTP host
+     */
     public String getConfiguredTarget() {
         return this.httpHost.toString();
     }
 
-    public List<BundleRepresentation> getInstalledBundles() throws SwookieeClientException, JsonParseException,
-    JsonMappingException, IllegalStateException, IOException {
+    public List<BundleRepresentation> getInstalledBundles() throws SwookieeClientException {
         final HttpGet get = new HttpGet(FRAMEWORK_BUNDLES_REPRESENTATIONS);
         final String response = makeCall(get, HttpStatus.SC_OK);
-        final List<BundleRepresentation> representations = mapper.readValue(response, mapper.getTypeFactory()
-                .constructCollectionType(List.class, BundleRepresentation.class));
+        List<BundleRepresentation> representations;
+        try {
+            representations = mapper.readValue(response,
+                    mapper.getTypeFactory().constructCollectionType(List.class, BundleRepresentation.class));
+        } catch (IOException ex) {
+            logger.error("Could not parse response: " + ex.getMessage(), ex);
+            throw new SwookieeClientException("Error while reading the list of bundles", ex);
+        }
         return representations;
 
     }
@@ -111,8 +173,28 @@ public final class SwookieeClient {
         }
     }
 
-    private void addForceHeader(final HttpPost post) {
-        post.setHeader("X-ForceBundleUpdate", "true");
+    private String getBundleSymbolicName(final File file) throws SwookieeClientException {
+        try (JarInputStream jarStream = new JarInputStream(new FileInputStream(file))) {
+            Manifest mf = jarStream.getManifest();
+            Attributes attr = mf.getMainAttributes();
+            String name = attr.getValue("Bundle-SymbolicName");
+            return name;
+        } catch (IOException ex) {
+            logger.error("Could not obtain Bundle-SymbolicName from file: " + ex.getMessage(), ex);
+            throw new SwookieeClientException("Could not obtain Bundle-SymbolicName from file", ex);
+        }
+    }
+
+    private boolean uninstallIfInstalled(String bundleSymbolicName) throws SwookieeClientException {
+        List<BundleRepresentation> installedBundles = getInstalledBundles();
+        for (BundleRepresentation bundleRepresentation : installedBundles) {
+            if (bundleRepresentation.getSymbolicName().equals(bundleSymbolicName)) {
+                long bundleId = bundleRepresentation.getId();
+                uninstallBundle(bundleId);
+                return true;
+            }
+        }
+        return false;
     }
 
     private void addFile(final HttpPost httppost, final File file) {
