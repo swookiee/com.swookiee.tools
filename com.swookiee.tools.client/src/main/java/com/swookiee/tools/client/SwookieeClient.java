@@ -40,7 +40,7 @@ import com.swookiee.runtime.ewok.representation.BundleStatusRepresentation;
  * <p>
  * Note: Since this API is in a very early stage changes may occur.
  */
-public final class SwookieeClient {
+public final class SwookieeClient implements AutoCloseable {
 
     private static final String FRAMEWORK_BUNDLES = "/framework/bundles";
     private static final String FRAMEWORK_BUNDLES_REPRESENTATIONS = "/framework/bundles/representations";
@@ -60,8 +60,9 @@ public final class SwookieeClient {
         this.httpHost = httpHost;
         this.mapper = new ObjectMapper();
     }
-
-    public void stop() {
+    
+    @Override
+    public void close() {
         try {
             httpclient.close();
         } catch (final IOException ex) {

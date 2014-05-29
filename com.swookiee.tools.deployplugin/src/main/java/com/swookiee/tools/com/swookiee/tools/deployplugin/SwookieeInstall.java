@@ -1,7 +1,6 @@
 package com.swookiee.tools.com.swookiee.tools.deployplugin;
 
 import java.io.File;
-import java.io.IOException;
 
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -63,15 +62,11 @@ public class SwookieeInstall extends AbstractMojo {
      */
     private String bundleFile;
 
-    private SwookieeClient swookieeClient;
-
     @Override
     public void execute() throws MojoExecutionException {
-        try {
-            this.swookieeClient = getSwookieeClient();
-            forceInstallAndStartBundle(new File(this.bundleFile));
-            this.swookieeClient.stop();
-        } catch (final SwookieeClientException | IOException ex) {
+        try (SwookieeClient swookieeClient = getSwookieeClient()) {
+            forceInstallAndStartBundle(swookieeClient, new File(this.bundleFile));
+        } catch (final SwookieeClientException ex) {
             getLog().error("Could not deploy bundle: " + ex.getMessage(), ex);
         }
     }
@@ -80,18 +75,17 @@ public class SwookieeInstall extends AbstractMojo {
         final SwookieClientBuilder swookieClientBuilder = SwookieClientBuilder.newTarget(this.host)
                 .withPort(this.port)
                 .withUsernamePassword(this.username, this.password);
-
         if (useHttps) {
             swookieClientBuilder.enableSelfSignedHttps();
         }
-
         return swookieClientBuilder.create();
     }
 
-    public void forceInstallAndStartBundle(final File file) throws SwookieeClientException, IOException {
+    public void forceInstallAndStartBundle(final SwookieeClient swookieeClient, final File file)
+            throws SwookieeClientException {
         getLog().info(
-                String.format("Installing %s to %s", file.getAbsolutePath(), this.swookieeClient.getConfiguredTarget()));
-        final String installedBundle = this.swookieeClient.installBundle(file, true);
-        this.swookieeClient.startBundle(installedBundle);
+                String.format("Installing %s to %s", file.getAbsolutePath(), swookieeClient.getConfiguredTarget()));
+        final String installedBundle = swookieeClient.installBundle(file, true);
+        swookieeClient.startBundle(installedBundle);
     }
 }
