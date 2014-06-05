@@ -8,6 +8,36 @@
     <packaging>pom</packaging>
 
     <name>Swookiee Tooling Projects</name>
+    <description>Swookiee REST Service Tooling build</description>
+    <url>http://swookiee.com</url>
+
+    <licenses>
+        <license>
+            <name>Eclipse Public License (EPL)</name>
+            <url>http://www.eclipse.org/legal/epl-v10.html</url>
+        </license>
+    </licenses>
+
+    <scm>
+        <connection>scm:git:git@github.com:swookiee/com.swookiee.tools.git</connection>
+        <developerConnection>scm:git:git@github.com:swookiee/com.swookiee.tools.git</developerConnection>
+        <url>git@github.com:swookiee/com.swookiee.tools.git</url>
+    </scm>
+
+    <distributionManagement>
+        <snapshotRepository>
+            <id>sonatype-nexus-snapshots</id>
+            <name>Sonatype Nexus Snapshots</name>
+            <url>http://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+    </distributionManagement>
+
+    <developers>
+        <developer>
+            <id>larsp</id>
+            <name>Lars Pfannenschmidt</name>
+        </developer>
+    </developers>
 
     <modules>
         <module>com.swookiee.tools.client</module>
