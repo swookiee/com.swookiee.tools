@@ -1,0 +1,14 @@
+language: java
+jdk: openjdk7
+before_install: "git clone -b travis `git config --get https://github.com/swookiee/com.swookiee.tools.git` target/travis"
+script: "[ ${TRAVIS_PULL_REQUEST} = 'false' ] && mvn clean deploy --settings target/travis/settings.xml || mvn clean verify --settings target/travis/settings.xml"
+
+# whitelist
+branches:
+  only:
+    - develop
+
+env:
+  global:
+  - secure: VHH2KY2oljDfpQgL7pP5MFgOTTbs57gXt8cVA8CP1g/JtKn/4UsqbCsy0iPGo4kpZ2L/o8fFfap6zi9tlr3nDQh4au7xixwq/0oLbPn6UcQsVgBEGEP/DTOthbfm+uU4/fdcFzTmJouUsen9ybsAPg3lpohL1KwkE75iiamSiaY=
+  - secure: UW+tVDym+juwyE60GI3xJ1xFHEaqB8HLVAIfAVcMbMNoYscoKYY9fsOCsdh/hBeoNLWEV8bMAtQCoOJIqOoMFVD5xuz7ea4VgHqYJVsIn/HkfMFet+HdHvN6U2TDY1UO7X8rRDD4o/7glAY3WOGe3F2FGojnLj3HFhYgUkw+uTE=
