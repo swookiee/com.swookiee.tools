@@ -55,11 +55,18 @@ public class SwookieeInstall extends AbstractMojo {
     private String password;
 
     /**
-     * Hostname
+     * Make use of Self signed https
      * 
      * @parameter default-value="false"
      */
     private boolean useHttps;
+
+    /**
+     * Enable self signed https
+     * 
+     * @parameter default-value="false"
+     */
+    private boolean useSelfSigned;
 
     /**
      * Do you want to deploy dependencies as well?
@@ -113,6 +120,7 @@ public class SwookieeInstall extends AbstractMojo {
             }
         } catch (final SwookieeClientException ex) {
             getLog().error("Could not deploy bundle: " + ex.getMessage(), ex);
+            throw new MojoExecutionException("Could not deploy bundle: " + ex.getMessage(), ex);
         }
     }
 
@@ -156,8 +164,11 @@ public class SwookieeInstall extends AbstractMojo {
         final SwookieClientBuilder swookieClientBuilder = SwookieClientBuilder.newTarget(this.host)
                 .withPort(this.port)
                 .withUsernamePassword(this.username, this.password);
-        if (useHttps) {
+        if (useSelfSigned) {
             swookieClientBuilder.enableSelfSignedHttps();
+        }
+        if (useHttps){
+            swookieClientBuilder.enableHttps();
         }
         return swookieClientBuilder.create();
     }

@@ -33,8 +33,9 @@ public final class SwookieClientBuilder {
     private Integer port = 8080;
     private String username = "admin";
     private String password = "admin123";
-    private boolean enableHttps = false;
-    private final boolean enableSelfSigned = false;
+    private boolean useHttps = false;
+    private boolean useSelfSigned = false;
+    private String proxy;
 
     private SwookieClientBuilder(final String hostname) {
         this.hostname = hostname;
@@ -50,13 +51,13 @@ public final class SwookieClientBuilder {
     }
 
     public SwookieClientBuilder enableHttps() {
-        this.enableHttps = true;
+        this.useHttps = true;
         return this;
     }
 
     public SwookieClientBuilder enableSelfSignedHttps() {
-        this.enableHttps = true;
-        enableHttps = true;
+        this.useSelfSigned = true;
+        this.useHttps = true;
         return this;
     }
 
@@ -86,7 +87,7 @@ public final class SwookieClientBuilder {
 
         final HttpClientBuilder httpClientBuilder = HttpClients.custom().setDefaultCredentialsProvider(credsProvider);
 
-        if (this.enableSelfSigned) {
+        if (this.useSelfSigned) {
             try {
                 final SSLContextBuilder builder = new SSLContextBuilder();
                 builder.loadTrustMaterial(null, new TrustSelfSignedStrategy());
@@ -97,12 +98,21 @@ public final class SwookieClientBuilder {
             }
         }
 
+        if (this.proxy != null) {
+            addProxySettings(httpClientBuilder);
+        }
+
         return httpClientBuilder.build();
+    }
+
+    private void addProxySettings(HttpClientBuilder httpClientBuilder) {
+        HttpHost proxyHost = new HttpHost(proxy);
+        httpClientBuilder.setProxy(proxyHost);
     }
 
     private HttpHost getHttpHost() {
         final HttpHost httpHost;
-        if (enableHttps) {
+        if (useHttps) {
             httpHost = new HttpHost(this.hostname, this.port, "https");
         } else {
             httpHost = new HttpHost(this.hostname, this.port);
