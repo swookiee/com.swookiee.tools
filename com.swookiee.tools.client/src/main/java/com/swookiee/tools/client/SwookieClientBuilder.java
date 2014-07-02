@@ -19,6 +19,8 @@ import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This Builder Class helps to create a {@link SwookieeClient} instance. You can configure target hostname, port,
@@ -28,6 +30,8 @@ import org.apache.http.impl.client.HttpClients;
  * Note: Since this API is in a very early stage changes may occur.
  */
 public final class SwookieClientBuilder {
+
+    private static final Logger logger = LoggerFactory.getLogger(SwookieClientBuilder.class);
 
     private final String hostname;
     private Integer port = 8080;
@@ -116,6 +120,7 @@ public final class SwookieClientBuilder {
     private void addProxySettings(HttpClientBuilder httpClientBuilder) {
         HttpHost proxyHost = new HttpHost(this.proxyHost, this.proxyPort);
         httpClientBuilder.setProxy(proxyHost);
+        logger.info("Using Proxy {} for HTTP connections", proxyHost.toString());
     }
 
     private HttpHost getHttpHost() {

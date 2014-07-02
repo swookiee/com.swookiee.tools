@@ -57,7 +57,7 @@ public class SwookieeInstall extends AbstractMojo {
     /**
      * Hostname of the Proxy.
      * 
-     * @parameter default-value=null
+     * @parameter
      */
     private String proxyHost;
 
