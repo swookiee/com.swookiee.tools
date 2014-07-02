@@ -55,6 +55,20 @@ public class SwookieeInstall extends AbstractMojo {
     private String password;
 
     /**
+     * Hostname of the Proxy.
+     * 
+     * @parameter default-value=null
+     */
+    private String proxyHost;
+
+    /**
+     * Port of the Proxy.
+     * 
+     * @parameter default-value=8080
+     */
+    private int proxyPort;
+
+    /**
      * Make use of Self signed https
      * 
      * @parameter default-value="false"
@@ -164,11 +178,14 @@ public class SwookieeInstall extends AbstractMojo {
         final SwookieClientBuilder swookieClientBuilder = SwookieClientBuilder.newTarget(this.host)
                 .withPort(this.port)
                 .withUsernamePassword(this.username, this.password);
-        if (useSelfSigned) {
+        if (this.useSelfSigned) {
             swookieClientBuilder.enableSelfSignedHttps();
         }
-        if (useHttps){
+        if (this.useHttps) {
             swookieClientBuilder.enableHttps();
+        }
+        if (this.proxyHost != null) {
+            swookieClientBuilder.withProxy(this.proxyHost, this.proxyPort);
         }
         return swookieClientBuilder.create();
     }
@@ -178,7 +195,7 @@ public class SwookieeInstall extends AbstractMojo {
         getLog().info(
                 String.format("Installing %s to %s", file.getAbsolutePath(), swookieeClient.getConfiguredTarget()));
         final String installedBundle = swookieeClient.installBundle(file, true);
-        try{
+        try {
             swookieeClient.startBundle(installedBundle);
         } catch (Exception ex) {
             getLog().warn("Could not start Bundle: " + file.toString());

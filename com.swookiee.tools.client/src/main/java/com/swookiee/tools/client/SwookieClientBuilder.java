@@ -35,7 +35,9 @@ public final class SwookieClientBuilder {
     private String password = "admin123";
     private boolean useHttps = false;
     private boolean useSelfSigned = false;
-    private String proxy;
+    private String proxyHost;
+    private int proxyPort;
+
 
     private SwookieClientBuilder(final String hostname) {
         this.hostname = hostname;
@@ -58,6 +60,12 @@ public final class SwookieClientBuilder {
     public SwookieClientBuilder enableSelfSignedHttps() {
         this.useSelfSigned = true;
         this.useHttps = true;
+        return this;
+    }
+
+    public SwookieClientBuilder withProxy(String proxyHost, int proxyPort) {
+        this.proxyHost = proxyHost;
+        this.proxyPort = proxyPort;
         return this;
     }
 
@@ -98,7 +106,7 @@ public final class SwookieClientBuilder {
             }
         }
 
-        if (this.proxy != null) {
+        if (this.proxyHost != null) {
             addProxySettings(httpClientBuilder);
         }
 
@@ -106,7 +114,7 @@ public final class SwookieClientBuilder {
     }
 
     private void addProxySettings(HttpClientBuilder httpClientBuilder) {
-        HttpHost proxyHost = new HttpHost(proxy);
+        HttpHost proxyHost = new HttpHost(this.proxyHost, this.proxyPort);
         httpClientBuilder.setProxy(proxyHost);
     }
 
