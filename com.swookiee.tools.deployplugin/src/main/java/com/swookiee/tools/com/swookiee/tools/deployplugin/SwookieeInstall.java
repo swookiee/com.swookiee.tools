@@ -156,13 +156,13 @@ public class SwookieeInstall extends AbstractMojo {
     private void deployDependencies(SwookieeClient swookieeClient) throws SwookieeClientException {
         for (Dependency dependency : dependencies) {
             for (Artifact artifact : artifacts) {
-                if (equalsDependencyArtefact(dependency, artifact)) {
-                    try {
-                        resolver.resolve(artifact, remoteRepositories, localRepository);
+                try {
+                    resolver.resolve(artifact, remoteRepositories, localRepository);
+                    if (equalsDependencyArtefact(dependency, artifact)) {
                         deployFile(swookieeClient, artifact.getFile().getPath());
-                    } catch (ArtifactResolutionException | ArtifactNotFoundException e) {
-                        getLog().error("Could not resolve dependency: " + dependency.getArtifactId(), e);
                     }
+                } catch (ArtifactResolutionException | ArtifactNotFoundException e) {
+                    getLog().error("Could not resolve dependency: " + dependency.getArtifactId(), e);
                 }
             }
         }
