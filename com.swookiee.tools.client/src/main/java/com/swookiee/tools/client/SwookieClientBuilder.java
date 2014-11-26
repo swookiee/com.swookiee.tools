@@ -1,9 +1,5 @@
 package com.swookiee.tools.client;
 
-import java.security.KeyManagementException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-
 import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
@@ -12,21 +8,23 @@ import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.conn.ssl.SSLContextBuilder;
-import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
+import org.apache.http.conn.ssl.TrustStrategy;
 import org.apache.http.impl.auth.BasicScheme;
-import org.apache.http.impl.client.BasicAuthCache;
-import org.apache.http.impl.client.BasicCredentialsProvider;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.client.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 
 /**
  * This Builder Class helps to create a {@link SwookieeClient} instance. You can configure target hostname, port,
  * username, password and HTTPS settings. If you do not set any properties the default target
  * <code>http://localhost:8080</code> with credentials <code>admin:admin123</code> will be used.
- * <p>
+ * <p/>
  * Note: Since this API is in a very early stage changes may occur.
  */
 public final class SwookieClientBuilder {
@@ -41,7 +39,6 @@ public final class SwookieClientBuilder {
     private boolean useSelfSigned = false;
     private String proxyHost;
     private int proxyPort;
-
 
     private SwookieClientBuilder(final String hostname) {
         this.hostname = hostname;
@@ -102,9 +99,17 @@ public final class SwookieClientBuilder {
         if (this.useSelfSigned) {
             try {
                 final SSLContextBuilder builder = new SSLContextBuilder();
-                builder.loadTrustMaterial(null, new TrustSelfSignedStrategy());
-                final SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(builder.build());
-                final CloseableHttpClient httpclient = httpClientBuilder.setSSLSocketFactory(sslsf).build();
+                builder.loadTrustMaterial(null, new TrustStrategy() {
+                    @Override
+                    public boolean isTrusted(X509Certificate[] chain, String authType)
+                            throws CertificateException {
+                        return true;
+                    }
+                });
+                final SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(builder.build(),
+                        SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
+                httpClientBuilder.setSSLSocketFactory(sslsf);
+
             } catch (NoSuchAlgorithmException | KeyStoreException | KeyManagementException ex) {
                 throw new SwookieeClientException("Could not initiate self signed certification", ex);
             }
