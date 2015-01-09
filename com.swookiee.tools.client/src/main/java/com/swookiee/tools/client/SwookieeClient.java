@@ -189,6 +189,10 @@ public final class SwookieeClient implements AutoCloseable {
     private boolean uninstallIfInstalled(String bundleSymbolicName) throws SwookieeClientException {
         List<BundleRepresentation> installedBundles = getInstalledBundles();
         for (BundleRepresentation bundleRepresentation : installedBundles) {
+            if (bundleRepresentation.getSymbolicName() == null) {
+                logger.warn("found installed bundle which has no symbolic name: "+bundleRepresentation.getLocation());
+                continue;
+            }
             if (bundleRepresentation.getSymbolicName().equals(bundleSymbolicName)) {
                 long bundleId = bundleRepresentation.getId();
                 uninstallBundle(bundleId);
