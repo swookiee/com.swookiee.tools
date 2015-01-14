@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
-Bnd-LastModified: 1404303523335
-Build-Jdk: 1.8.0_05
-Built-By: lpfannenschmidt
+Bnd-LastModified: 1420794058463
+Build-Jdk: 1.8.0
+Built-By: tkruger1
 Bundle-Description: Swookiee REST Service Tooling build
 Bundle-License: http://www.eclipse.org/legal/epl-v10.html
 Bundle-ManifestVersion: 2
